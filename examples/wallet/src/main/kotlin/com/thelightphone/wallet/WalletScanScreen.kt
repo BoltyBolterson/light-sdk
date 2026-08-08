@@ -16,12 +16,6 @@ import com.thelightphone.sdk.ui.LightTheme
 import com.thelightphone.sdk.ui.LightThemeController
 import com.thelightphone.sdk.ui.LightThemeTokens
 
-/**
- * Scans a destination address for the send flow. Returns the raw scanned string -
- * parsing chain-specific URI formats (e.g. a Solana Pay request) isn't done yet, so unlike
- * AuthenticatorQrScannerScreen's Result-wrapped return (which reflects a real parse step that
- * can fail), there's no failure case to model here yet.
- */
 class WalletScanScreen(
     sealedActivity: SealedLightActivity,
 ) : SimpleLightScreen<String>(sealedActivity) {

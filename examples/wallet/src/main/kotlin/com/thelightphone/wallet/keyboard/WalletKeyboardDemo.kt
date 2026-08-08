@@ -18,11 +18,6 @@ import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightTheme
 import com.thelightphone.sdk.ui.LightThemeTokens
 
-/**
- * Internal, interactive demo of [WalletKeyboard] - not wired into any screen. Exists purely so
- * the component can be eyeballed rendering + typing across all four layouts (via the layout key)
- * without needing a private-key-import or PIN screen to exist yet.
- */
 @Composable
 private fun WalletKeyboardDemo(startingLayout: KeyboardLayout = KeyboardLayout.EN_QWERTY) {
     var typed by remember { mutableStateOf("") }

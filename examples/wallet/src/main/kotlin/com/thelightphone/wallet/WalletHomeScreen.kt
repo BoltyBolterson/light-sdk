@@ -113,12 +113,6 @@ class WalletHomeScreen(
                                     }
                                 },
                             ),
-                            LightBarButton.Text(
-                                text = "SWAP",
-                                onClick = {
-                                    navigateTo(screenFactory = { WalletSwapScreen(it) })
-                                },
-                            ),
                         ),
                     )
                 }

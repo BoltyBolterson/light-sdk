@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Custom RPC endpoints are capped at this length before being rejected. */
 private const val MAX_RPC_ENDPOINT_LENGTH = 2048
 
 data class SettingsUiState(
@@ -28,7 +27,6 @@ data class SettingsUiState(
     val manualRefreshMode: Boolean = false,
 )
 
-/** [Chain]-to-[DataStore] key lookups so callers can index by chain rather than repeat a `when`. */
 private fun chainEnabledKey(chain: Chain) = when (chain) {
     Chain.BITCOIN -> WalletPreferences.CHAIN_BITCOIN_ENABLED
     Chain.ETHEREUM -> WalletPreferences.CHAIN_ETHEREUM_ENABLED
@@ -113,15 +111,6 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * Validates and persists a BYO RPC endpoint. A blank value clears the custom endpoint
-     * (reverting to the default, represented the same way as "unset" elsewhere in this class:
-     * an empty string). A non-blank value must parse as an absolute `http`/`https` URL with a
-     * non-empty host, and stay under [MAX_RPC_ENDPOINT_LENGTH] - anything else is rejected
-     * without touching DataStore, and reported via [errorModal] so the future code path that
-     * actually connects to this endpoint never sees attacker-controlled schemes (e.g. `file:`,
-     * `javascript:`) or unparsable garbage.
-     */
     fun setRpcEndpoint(chain: Chain, endpoint: String) {
         val trimmed = endpoint.trim()
 

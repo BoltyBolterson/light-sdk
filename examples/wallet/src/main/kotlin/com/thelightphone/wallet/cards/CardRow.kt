@@ -10,7 +10,6 @@ import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.wallet.CardSummary
 
-/** Mirrors WalletAccountRow's layout for the Cards list: title line + a lighter detail line. */
 @Composable
 fun CardRow(
     card: CardSummary,

@@ -5,18 +5,9 @@ import org.bouncycastle.crypto.digests.SHA512Digest
 import org.bouncycastle.crypto.generators.PKCS5S2ParametersGenerator
 import org.bouncycastle.crypto.params.KeyParameter
 
-/**
- * BIP-39: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
- * Mnemonic generation/validation and the mnemonic -> seed PBKDF2 function. English wordlist
- * only (all ASCII, so no NFKD normalization is needed - the spec requires it in general, but
- * it's a no-op for this wordlist).
- */
+/** BIP-39 mnemonic generation, validation and seed derivation. English wordlist only. */
 internal object Bip39 {
-    private const val ENTROPY_BITS = 128 // 12-word mnemonic; 128 bits is what every major
-    // wallet defaults to (Phantom, MetaMask, Sparrow) - 256-bit/24-word is supported by the
-    // spec but is not a meaningfully stronger security margin for this purpose and asks more
-    // of the user to safely transcribe. Not hardcoded elsewhere; change here if that tradeoff
-    // should go the other way.
+    private const val ENTROPY_BITS = 128 // 12 words, same as every other wallet
     private const val PBKDF2_ITERATIONS = 2048
     private const val SEED_BITS = 512
 
@@ -27,7 +18,6 @@ internal object Bip39 {
         val checksumLength = entropy.size * 8 / 32
         val checksumByte = MessageDigest.getInstance("SHA-256").digest(entropy)[0]
 
-        // entropy bits followed by the first `checksumLength` bits of SHA-256(entropy)
         val bits = StringBuilder()
         for (byte in entropy) {
             bits.append(byteToBits(byte))
@@ -37,8 +27,6 @@ internal object Bip39 {
         return bits.chunked(11).map { chunk -> Bip39Wordlist.WORDS[chunk.toInt(2)] }
     }
 
-    /** Recomputes the checksum to confirm [mnemonic] is well-formed (e.g. for a "restore from
-     * seed phrase" import flow) - not used by the key-generation path itself. */
     fun isValidMnemonic(mnemonic: List<String>): Boolean {
         if (mnemonic.size !in setOf(12, 15, 18, 21, 24)) return false
         val indices = mnemonic.map { word -> Bip39Wordlist.WORDS.indexOf(word).also { if (it < 0) return false } }
@@ -52,7 +40,6 @@ internal object Bip39 {
         return actualChecksum == expectedChecksumBits
     }
 
-    /** PBKDF2-HMAC-SHA512(mnemonic, salt = "mnemonic" + passphrase, 2048 rounds, 64-byte output). */
     fun mnemonicToSeed(mnemonic: List<String>, passphrase: String = ""): ByteArray {
         val password = mnemonic.joinToString(" ").toByteArray(Charsets.UTF_8)
         val salt = ("mnemonic" + passphrase).toByteArray(Charsets.UTF_8)

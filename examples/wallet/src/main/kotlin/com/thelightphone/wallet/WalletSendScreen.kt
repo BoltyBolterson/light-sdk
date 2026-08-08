@@ -26,11 +26,6 @@ import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 
-/**
- * Send flow stub: destination + amount entry only. No chain RPC client exists in this
- * scaffold yet, so there's nothing to actually build/sign/broadcast a transaction with -
- * tapping SEND explains that rather than pretending to work.
- */
 class WalletSendScreen(
     sealedActivity: SealedLightActivity,
     private val destinationAddress: String,
@@ -101,8 +96,7 @@ class WalletSendScreen(
                                         },
                                         resultCallback = { confirmed ->
                                             if (confirmed) {
-                                                errorModal = "Sending isn't wired up yet - this scaffold has no " +
-                                                    "chain RPC client to build or broadcast a transaction with."
+                                                errorModal = "Sending isn't available yet."
                                             }
                                         },
                                     )

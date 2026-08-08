@@ -4,11 +4,6 @@ import java.nio.ByteBuffer
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 
-/**
- * AES/GCM encrypt-decrypt for raw private key bytes, mirroring
- * examples/authenticator's TotpSecretCipher (String-based there; ByteArray here
- * since chain private keys are raw fixed-length byte material, not text).
- */
 internal class WalletKeyCipher(
     private val keystore: WalletKeystore = WalletKeystore(),
 ) {

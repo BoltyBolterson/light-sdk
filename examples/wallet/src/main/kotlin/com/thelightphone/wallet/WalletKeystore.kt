@@ -6,11 +6,6 @@ import java.security.KeyStore
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
-/**
- * Wraps per-chain private keys at rest with an AndroidKeyStore-backed AES-256-GCM key.
- * Mirrors examples/authenticator's TotpKeystore. StrongBox availability on LightOS
- * hardware is still unconfirmed (per discussion #139) so it is not requested here.
- */
 internal class WalletKeystore(
     private val keyAlias: String = KEY_ALIAS,
 ) {

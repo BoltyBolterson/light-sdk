@@ -6,7 +6,6 @@ import androidx.room.Query
 
 @Dao
 internal interface CardDao {
-    /** Returns the generated row id. */
     @Insert
     fun insert(card: CardEntity): Long
 

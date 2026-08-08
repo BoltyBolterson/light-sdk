@@ -34,12 +34,6 @@ import com.thelightphone.sdk.ui.lightClickable
 import com.thelightphone.wallet.cards.CardsHomeScreen
 import com.thelightphone.wallet.settings.SettingsScreen
 
-/**
- * New top-level entry point: every on-device wallet is its own named BIP-39 seed
- * (see WalletAccountRepository), and this is where they're listed, added, renamed, and opened.
- * Tapping a wallet opens WalletHomeScreen for its id; WalletHomeScreen no longer picks an
- * implicit "first" wallet itself.
- */
 @InitialScreen
 class WalletsListScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, WalletsListViewModel>(sealedActivity) {
@@ -131,9 +125,6 @@ class WalletsListScreen(sealedActivity: SealedLightActivity) :
                     items = listOf(
                         LightBarButton.Text(
                             text = "ADD WALLET",
-                            // LightBarButton/LightBottomBar have no `enabled` param, so the
-                            // debounce is enforced here: rapid taps are no-ops while a create is
-                            // already in flight instead of kicking off another one.
                             onClick = {
                                 if (!isCreatingWallet) {
                                     viewModel.addWallet()

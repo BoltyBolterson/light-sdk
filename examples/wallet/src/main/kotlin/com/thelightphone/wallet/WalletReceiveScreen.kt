@@ -47,13 +47,6 @@ private const val QR_PLACEHOLDER_MODULE_COUNT = 21
 private const val QR_PLACEHOLDER_CORNER_RADIUS_DP = 6
 private const val QR_PLACEHOLDER_PADDING_DP = 10
 
-/**
- * Shows the receive address below a placeholder QR block. Real QR-code *generation* is a
- * separate, not-yet-started task - this SDK doesn't have a QR-generation composable yet,
- * only LightQrCodeScanner for reading one - so [QrPlaceholder] below is a static graphic,
- * not a real scannable code. Worth raising alongside the NFC wrapper gap from discussion
- * #139 rather than pulling in an unapproved third-party QR-gen dependency.
- */
 class WalletReceiveScreen(
     sealedActivity: SealedLightActivity,
     private val account: WalletAccount,
@@ -106,9 +99,6 @@ class WalletReceiveScreen(
                     }
                 }
 
-                // Solana Pay's NFC flow is Solana-specific (see discussion #139) - the button
-                // only makes sense on that chain's receive screen, and only once there's a real
-                // NFC API to back it (see NfcTapTarget.isAvailable / UnavailableNfcTapTarget).
                 if (account.chain == Chain.SOLANA && nfcTapTarget.isAvailable) {
                     LightBottomBar(
                         items = listOf(
@@ -136,13 +126,6 @@ class WalletReceiveScreen(
     }
 }
 
-/**
- * PLACEHOLDER ONLY - stands in for where a real, scannable QR code will render once
- * QR-code *generation* is wired up (a separate, not-yet-started task; see the class doc
- * above). This draws a fixed finder-pattern-plus-noise graphic on a white card, the way a
- * real QR code would be framed, but it does not encode the address or anything else - it
- * takes no data as input and must never be presented as scannable.
- */
 @Composable
 private fun QrPlaceholder(modifier: Modifier = Modifier) {
     Box(
@@ -168,7 +151,6 @@ private fun QrPlaceholder(modifier: Modifier = Modifier) {
     }
 }
 
-/** True for the three 7x7 corner "finder pattern" blocks real QR codes use to anchor a scan. */
 private fun isQrPlaceholderFinderModule(row: Int, col: Int): Boolean {
     val lastBlockStart = QR_PLACEHOLDER_MODULE_COUNT - 7
     return isQrPlaceholderFinderBlock(row, col, 0, 0) ||
@@ -185,10 +167,5 @@ private fun isQrPlaceholderFinderBlock(row: Int, col: Int, blockRow: Int, blockC
     return isOuterRing || isInnerCore
 }
 
-/**
- * Fixed pseudo-noise for the rest of the grid so it reads as "structured data" the way a
- * real QR code's modules do. Purely decorative - a function of grid position only, so it
- * cannot be mistaken for encoding the address (or anything real).
- */
 private fun isQrPlaceholderFillerModule(row: Int, col: Int): Boolean =
     (row * 7 + col * 13 + row * col) % 5 < 2

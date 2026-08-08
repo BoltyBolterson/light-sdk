@@ -9,11 +9,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 
-/**
- * Tests [auditPrice], the pure gate behind [PythPriceClient.getAuditedPrice] (split out
- * specifically so these don't need a mocked HTTP layer - see its doc), plus
- * [PythPrice.confidenceRatio] directly.
- */
 class PythPriceClientTest {
     private val defaultMaxConfidenceRatio = PythPriceClient.DEFAULT_MAX_CONFIDENCE_RATIO
     private val defaultMaxPriceAge = PythPriceClient.DEFAULT_MAX_PRICE_AGE
@@ -30,16 +25,12 @@ class PythPriceClientTest {
         rawUpdateData = ByteArray(0),
     )
 
-    // ---- Fix 1: staleness gate ----
-
     @Test
     fun stalePublishTimeIsRejectedEvenWithTightConfidence() {
         val now = Instant.now()
         val staleTime = now.minusSeconds(defaultMaxPriceAge.seconds + 1)
 
         val result = auditPrice(
-            // 0.01 / 50000 is a tiny fraction of the default 1% threshold - would trivially
-            // pass the confidence gate on its own.
             price = price(confidenceUsd = BigDecimal("0.01"), publishTime = staleTime.epochSecond),
             maxConfidenceRatio = defaultMaxConfidenceRatio,
             maxPriceAge = defaultMaxPriceAge,
@@ -79,8 +70,6 @@ class PythPriceClientTest {
 
         assertIs<PythAuditedPriceResult.Trusted>(result)
     }
-
-    // ---- Fix 2: zero/degenerate price fails closed ----
 
     @Test
     fun zeroPriceIsRejectedNotMaximallyConfident() {
@@ -126,8 +115,6 @@ class PythPriceClientTest {
         }
     }
 
-    // ---- Unchanged exponent/confidence-ratio math still behaves as before ----
-
     @Test
     fun confidenceRatioComputesExpectedFraction() {
         val p = price(usdPrice = BigDecimal("100.00"), confidenceUsd = BigDecimal("1.00"))
@@ -139,7 +126,6 @@ class PythPriceClientTest {
         val now = Instant.now()
 
         val result = auditPrice(
-            // 0.50 / 100.00 = 0.5%, under the default 1% threshold.
             price = price(usdPrice = BigDecimal("100.00"), confidenceUsd = BigDecimal("0.50"), publishTime = now.epochSecond),
             maxConfidenceRatio = defaultMaxConfidenceRatio,
             maxPriceAge = defaultMaxPriceAge,
@@ -154,7 +140,6 @@ class PythPriceClientTest {
         val now = Instant.now()
 
         val result = auditPrice(
-            // 2.00 / 100.00 = 2%, over the default 1% threshold.
             price = price(usdPrice = BigDecimal("100.00"), confidenceUsd = BigDecimal("2.00"), publishTime = now.epochSecond),
             maxConfidenceRatio = defaultMaxConfidenceRatio,
             maxPriceAge = defaultMaxPriceAge,

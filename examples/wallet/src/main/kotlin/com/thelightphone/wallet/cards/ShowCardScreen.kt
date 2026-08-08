@@ -40,21 +40,6 @@ import com.thelightphone.wallet.WalletDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/**
- * Renders a stored card's decrypted payload for scanning.
- *
- * QR-generation gap: same situation as WalletReceiveScreen's Solana Pay comment - this SDK has
- * no real QR/barcode-*rendering* composable yet (only LightQrCodeScanner, which *reads* one).
- * Rather than fake it, any [barcodeFormat] that implies a QR code gets a clearly-labeled
- * placeholder block with the decrypted payload shown as text underneath; non-QR formats get the
- * same placeholder treatment for the same reason. Real encoding is deliberately deferred,
- * matching the rest of this pass's scope.
- *
- * Full-brightness gap: this pass could not find a brightness-boost API anywhere in the SDK to
- * wire up for scan-friendly rendering - SealedLightActivity/SealedLightContext expose no
- * window/brightness surface, and LightThemeController only toggles the color scheme, not
- * hardware brightness. Noting this as a gap rather than inventing an API.
- */
 class ShowCardScreen(
     sealedActivity: SealedLightActivity,
     private val cardId: Long,
@@ -126,13 +111,7 @@ class ShowCardScreen(
                             contentAlignment = Alignment.Center,
                         ) {
                             LightText(
-                                text = if (isQr) {
-                                    "QR CODE PLACEHOLDER\n\nreal QR rendering isn't wired up yet - " +
-                                        "this isn't a scannable code"
-                                } else {
-                                    "$barcodeFormat PLACEHOLDER\n\nreal barcode rendering isn't " +
-                                        "wired up yet - this isn't a scannable code"
-                                },
+                                text = "Not scannable yet\n\nthe code is below",
                                 variant = LightTextVariant.Detail,
                                 align = TextAlign.Center,
                             )

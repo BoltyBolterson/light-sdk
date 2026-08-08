@@ -1,9 +1,8 @@
 package com.thelightphone.wallet.crypto
 
 /**
- * BIP-39 English wordlist (2048 words), verbatim from the official spec:
- * https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
- * sha256: 2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda
+ * BIP-39 English wordlist, verbatim from the spec.
+ * sha256 2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda
  */
 internal object Bip39Wordlist {
     val WORDS: List<String> = """

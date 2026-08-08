@@ -4,11 +4,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** Fixtures from the canonical trezor/python-mnemonic test vectors (passphrase "TREZOR"). */
+/** Vectors from trezor/python-mnemonic, passphrase "TREZOR". */
 class Bip39Test {
     @Test
     fun allZeroEntropy() {
-        val entropy = ByteArray(16) // 00000000000000000000000000000000
+        val entropy = ByteArray(16)
         val mnemonic = Bip39.entropyToMnemonic(entropy)
 
         assertEquals(

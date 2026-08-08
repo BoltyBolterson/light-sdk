@@ -5,12 +5,7 @@ import org.bouncycastle.crypto.digests.SHA512Digest
 import org.bouncycastle.crypto.macs.HMac
 import org.bouncycastle.crypto.params.KeyParameter
 
-/**
- * BIP-32 hierarchical deterministic key derivation over secp256k1 (Bitcoin, Ethereum):
- * https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
- * Only CKDpriv (private-parent-to-private-child) is implemented - this wallet never needs to
- * hand out an extended public key. Verified against the spec's Test Vector 1 in Bip32Test.kt.
- */
+/** BIP-32 key derivation over secp256k1 (bitcoin, ethereum). Private parent to private child only. */
 internal object Bip32 {
     const val HARDENED_OFFSET: Long = 0x80000000L
 
@@ -23,7 +18,6 @@ internal object Bip32 {
         return ExtendedKey(il, ir)
     }
 
-    /** [index] < HARDENED_OFFSET for a normal child, >= HARDENED_OFFSET for a hardened one. */
     fun deriveChild(parent: ExtendedKey, index: Long): ExtendedKey {
         val indexBytes = ByteArray(4) { i -> ((index shr (24 - 8 * i)) and 0xFF).toByte() }
         val data = if (index >= HARDENED_OFFSET) {
@@ -42,7 +36,7 @@ internal object Bip32 {
         return ExtendedKey(childKey.toFixedBytes(32), ir)
     }
 
-    /** Derives along a full hardened+normal path, e.g. "m/44'/60'/0'/0/0". */
+    /** Full path, e.g. "m/44'/60'/0'/0/0". */
     fun derivePath(seed: ByteArray, path: String): ExtendedKey {
         var key = masterKeyFromSeed(seed)
         for (segment in parsePath(path)) {

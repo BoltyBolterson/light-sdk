@@ -37,12 +37,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * Manual entry only this pass: name + barcode format + raw payload, each edited via the shared
- * WalletTextEditorScreen (same LightTextField-taps-into-editor pattern WalletSendScreen uses for
- * its amount field). Camera-based scanning (LightQrCodeScanner) is out of scope here - tapping
- * SCAN explains that rather than pretending to work, mirroring WalletSendScreen's SEND button.
- */
 class AddCardScreen(
     sealedActivity: SealedLightActivity,
 ) : SimpleLightScreen<Unit>(sealedActivity) {
@@ -59,9 +53,6 @@ class AddCardScreen(
         var barcodeFormat by remember { mutableStateOf("") }
         var payload by remember { mutableStateOf("") }
         var errorModal by remember { mutableStateOf<String?>(null) }
-        // True while an addCard() call is in flight, so a double-tap on SAVE can't kick off a
-        // second DB write before the first one finishes (same pattern as WalletsListViewModel's
-        // isCreatingWallet - this screen has no dedicated ViewModel, so it's local state here).
         var isSaving by remember { mutableStateOf(false) }
 
         LightTheme(colors = themeColors) {
@@ -154,25 +145,16 @@ class AddCardScreen(
                         LightBarButton.Text(
                             text = "SCAN",
                             onClick = {
-                                errorModal = "Camera scanning isn't wired up yet - this pass is " +
-                                    "manual entry only. Fill in the fields above instead."
+                                errorModal = "Scanning isn't available yet. Enter the card by hand."
                             },
                         ),
                         LightBarButton.Text(
                             text = "SAVE",
-                            // LightBarButton has no `enabled` param, so the debounce is enforced
-                            // here: rapid taps are no-ops while a save is already in flight
-                            // instead of kicking off a second addCard() write.
                             onClick = {
-                                if (isSaving) {
-                                    // no-op: save already in flight
-                                } else if (name.isBlank() || barcodeFormat.isBlank() || payload.isBlank()) {
+                                if (name.isBlank() || barcodeFormat.isBlank() || payload.isBlank()) {
                                     errorModal = "Fill in name, barcode format, and payload first."
-                                } else {
+                                } else if (!isSaving) {
                                     isSaving = true
-                                    // Room forbids main-thread queries (see LightDb.kt's
-                                    // buildDatabase - no allowMainThreadQueries()), so the write
-                                    // has to hop to IO like every other DB call in this module.
                                     scope.launch {
                                         try {
                                             withContext(Dispatchers.IO) {

@@ -3,11 +3,7 @@ package com.thelightphone.wallet.crypto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Fixtures from BIP-32's official Test Vector 1
- * (https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), decoded from the spec's
- * xprv strings down to raw (private key, chain code) hex.
- */
+/** BIP-32 test vector 1, decoded from the spec's xprv strings to raw key + chain code hex. */
 class Bip32Test {
     private val seed = fromHex("000102030405060708090a0b0c0d0e0f")
 
@@ -21,19 +17,18 @@ class Bip32Test {
     @Test
     fun hardenedChild0() {
         val master = Bip32.masterKeyFromSeed(seed)
-        val child = Bip32.deriveChild(master, Bip32.HARDENED_OFFSET) // 0'
+        val child = Bip32.deriveChild(master, Bip32.HARDENED_OFFSET)
 
         assertEquals("edb2e14f9ee77d26dd93b4ecede8d16ed408ce149b6cd80b0715a2d911a0afea", toHex(child.privateKey))
         assertEquals("47fdacbd0f1097043b78c63c20c34ef4ed9a111d980047ad16282c7ae6236141", toHex(child.chainCode))
     }
 
     @Test
-    fun derivePathMatchesStepwiseDerivation() {
+    fun derivePathMatchesSpecVector() {
         val viaPath = Bip32.derivePath(seed, "m/0'")
-        val stepwise = Bip32.deriveChild(Bip32.masterKeyFromSeed(seed), Bip32.HARDENED_OFFSET)
 
-        assertEquals(toHex(stepwise.privateKey), toHex(viaPath.privateKey))
-        assertEquals(toHex(stepwise.chainCode), toHex(viaPath.chainCode))
+        assertEquals("edb2e14f9ee77d26dd93b4ecede8d16ed408ce149b6cd80b0715a2d911a0afea", toHex(viaPath.privateKey))
+        assertEquals("47fdacbd0f1097043b78c63c20c34ef4ed9a111d980047ad16282c7ae6236141", toHex(viaPath.chainCode))
     }
 
     private fun toHex(bytes: ByteArray): String = bytes.joinToString("") { "%02x".format(it) }

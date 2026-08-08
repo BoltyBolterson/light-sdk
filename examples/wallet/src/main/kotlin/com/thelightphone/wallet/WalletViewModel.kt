@@ -37,11 +37,6 @@ class WalletViewModel(
 
     private fun loadAccounts() {
         viewModelScope.launch(Dispatchers.IO) {
-            // repository.listAccounts() decrypts this wallet's wrapped BIP-39 entropy under the
-            // hood (WalletKeyCipher.decrypt()), which can throw on a corrupted blob or an Android
-            // Keystore key invalidated by a biometric/lock-screen change. Guard it the same way
-            // cards/ShowCardScreen.kt guards its decrypt call, so a bad blob shows an error modal
-            // instead of crashing the app.
             runCatching { repository.listAccounts(walletId) }
                 .onSuccess { _accounts.value = it }
                 .onFailure {

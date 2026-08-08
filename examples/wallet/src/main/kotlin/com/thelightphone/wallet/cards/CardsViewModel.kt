@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/** Same shape as WalletViewModel: loads a summary list fresh on every show so cards added
- * from AddCardScreen show up immediately on back-navigation. */
 class CardsViewModel(
     private val repository: CardRepository,
 ) : LightViewModel<Unit>() {

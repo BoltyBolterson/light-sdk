@@ -34,12 +34,6 @@ import com.thelightphone.wallet.WalletEditorRequest
 import com.thelightphone.wallet.WalletTextEditorScreen
 import com.thelightphone.wallet.keyboard.KeyboardLayout
 
-/**
- * Wallet-wide settings: keyboard layout, per-chain enable/disable, BYO RPC endpoints, offline
- * mode, and manual refresh mode. Unlike `WeatherScreenMode.Settings` (a mode of that example's
- * single screen), this is its own screen class - these settings span the whole wallet rather
- * than one screen's concerns, so there's no natural "parent" screen mode to fold them into.
- */
 class SettingsScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, SettingsViewModel>(sealedActivity) {
 
@@ -157,10 +151,6 @@ private fun SectionHeading(text: String) {
     )
 }
 
-/**
- * Tappable row toggling a boolean setting on/off, built directly from [LightIcons.TOGGLE_STATE_ON]
- * / [LightIcons.TOGGLE_STATE_OFF] - this SDK has no dedicated switch/toggle composable yet.
- */
 @Composable
 private fun ToggleRow(
     label: String,
@@ -187,7 +177,6 @@ private fun ToggleRow(
     }
 }
 
-/** Tappable row for one option in a single-select group (here, [KeyboardLayout]). */
 @Composable
 private fun KeyboardLayoutRow(
     layout: KeyboardLayout,

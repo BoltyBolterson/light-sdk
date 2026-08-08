@@ -1,10 +1,5 @@
 package com.thelightphone.wallet
 
-/**
- * Owns stored gift card / membership / ticket barcodes: persists only the AES-GCM-wrapped
- * payload (never plaintext barcode data at rest), mirroring WalletAccountRepository's
- * singleton + encrypt-on-write pattern and reusing the same WalletKeyCipher.
- */
 class CardRepository private constructor(
     database: WalletDatabase,
     private val cipher: WalletKeyCipher,

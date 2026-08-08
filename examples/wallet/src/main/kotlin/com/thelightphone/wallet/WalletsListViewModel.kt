@@ -15,8 +15,6 @@ class WalletsListViewModel(
     private val _wallets = MutableStateFlow<List<WalletSummary>>(emptyList())
     val wallets: StateFlow<List<WalletSummary>> = _wallets.asStateFlow()
 
-    /** True while a createWallet() call is in flight, so rapid ADD WALLET taps can't kick off
-     * more than one wallet creation (each one is a fresh, distinct BIP-39 mnemonic). */
     private val _isCreatingWallet = MutableStateFlow(false)
     val isCreatingWallet: StateFlow<Boolean> = _isCreatingWallet.asStateFlow()
 

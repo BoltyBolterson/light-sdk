@@ -32,10 +32,6 @@ import com.thelightphone.wallet.CardRepository
 import com.thelightphone.wallet.WalletAccountRepository
 import com.thelightphone.wallet.WalletDatabase
 
-/**
- * Entry point for stored gift cards / tickets / membership cards - separate from the crypto
- * WalletHomeScreen. Reachable via the "CARDS" button in WalletsListScreen's bottom bar.
- */
 class CardsHomeScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, CardsViewModel>(sealedActivity) {
 

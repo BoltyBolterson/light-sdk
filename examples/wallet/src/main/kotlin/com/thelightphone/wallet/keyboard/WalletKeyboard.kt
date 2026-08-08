@@ -33,34 +33,6 @@ private val KEY_CORNER_RADIUS = 6.dp
 private val KEY_SPACING = 4.dp
 private val ROW_SPACING = 8.dp
 
-/**
- * A fully self-contained Compose keyboard for the highest-stakes text entry in the app (private
- * key import today, a PIN later).
- *
- * It never touches the system IME: there is no [android.inputmethodservice.InputMethodService]
- * anywhere in this component, no manifest `<service>` declaration (this SDK's manifest generator
- * deliberately can't declare one), and no keystroke ever leaves the Compose tree - every press is
- * delivered directly through [onKeyPress] / [onBackspace] as a plain callback, in-process.
- *
- * Supports all four layouts LightOS's own system keyboard ships - [KeyboardLayout.EN_QWERTY],
- * [KeyboardLayout.EN_COLEMAK], [KeyboardLayout.FR_AZERTY], [KeyboardLayout.BE_AZERTY] - switchable
- * live via the layout key, with real key-arrangement data ported from `light-keyboard`
- * (see [KeyboardLayoutData] for provenance). This is deliberate: forcing someone into an
- * unfamiliar layout on the input where a mistake is most costly increases mistyping risk, it
- * doesn't reduce it.
- *
- * This composable has no screen to plug into yet - private-key-import and PIN entry screens are
- * a later pass - so it is entirely self-contained and side-effect free: callers own the text
- * buffer, this only reports keystrokes.
- *
- * @param onKeyPress invoked with the literal character to insert (already cased/localized for
- *   the active layout + shift state), including `' '` for the space bar.
- * @param onBackspace invoked when the delete key is pressed.
- * @param initialLayout the layout to render on first composition.
- * @param onLayoutChange invoked whenever the user switches layouts, so a caller can persist the
- *   choice (e.g. to reuse across a private-key-import and a later PIN screen).
- * @param onSubmit if non-null, renders a "done" key that invokes it; otherwise omitted.
- */
 @Composable
 fun WalletKeyboard(
     onKeyPress: (Char) -> Unit,
@@ -77,8 +49,6 @@ fun WalletKeyboard(
 
     fun pressLetter(c: Char) {
         onKeyPress(c)
-        // Standard shift behavior: one uppercase key, then back to lowercase. Caps lock
-        // (double-tap) is sticky and unaffected by ordinary key presses.
         if (case == KeyCase.SHIFT) case = KeyCase.LOWER
     }
 

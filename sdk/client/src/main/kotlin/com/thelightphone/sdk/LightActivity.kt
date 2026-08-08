@@ -227,6 +227,11 @@ class SealedLightContext(internal val androidContext: Context) {
     val dataStore: DataStore<Preferences> by lazy{ androidContext.dataStore }
     val filesDir: File by lazy{ androidContext.filesDir }
     val fileShare: LightFileShare by lazy { LightFileShare(androidContext) }
+    /** Application [Context], exposed for consumers (e.g. examples/wallet's WalletDatabase) that
+     * need to build their own Android framework objects - like a Room database with non-default
+     * migration options - without this sealed wrapper having to grow a bespoke API for every such
+     * case. Doesn't change any existing behavior; purely additive surface. */
+    val applicationContext: Context by lazy { androidContext.applicationContext }
     fun readAsset(path: String): ByteArray = androidContext.assets.open(path).use { it.readBytes() }
 }
 /**

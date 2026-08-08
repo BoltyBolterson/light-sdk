@@ -70,6 +70,10 @@ object LightIcons {
         name = "bluetooth",
         drawableResource = R.drawable.ic_bluetooth_white,
     )
+    object BTC : LightIconConfiguration(
+        name = "bitcoin",
+        drawableResource = R.drawable.ic_btc_white,
+    )
     object CALL : LightIconConfiguration(
         name = "call",
         drawableResource = R.drawable.ic_call_white,
@@ -218,6 +222,10 @@ object LightIcons {
         name = "emergency",
         drawableResource = R.drawable.ic_emergency_white,
     )
+    object ETH : LightIconConfiguration(
+        name = "ethereum",
+        drawableResource = R.drawable.ic_eth_white,
+    )
     object FCC_MARK : LightIconConfiguration(
         name = "fcc mark",
         drawableResource = R.drawable.ic_fcc_mark_white,
@@ -309,6 +317,10 @@ object LightIcons {
     object SIGNAL_NONE : LightIconConfiguration(
         name = "no signal",
         drawableResource = R.drawable.ic_signal_none_white,
+    )
+    object SOL : LightIconConfiguration(
+        name = "solana",
+        drawableResource = R.drawable.ic_sol_white,
     )
     object SPEAKER : LightIconConfiguration(
         name = "speaker",

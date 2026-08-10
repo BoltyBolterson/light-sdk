@@ -8,6 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class PythPriceClientTest {
     private val defaultMaxConfidenceRatio = PythPriceClient.DEFAULT_MAX_CONFIDENCE_RATIO
@@ -22,7 +23,6 @@ class PythPriceClientTest {
         usdPrice = usdPrice,
         confidenceUsd = confidenceUsd,
         publishTime = publishTime,
-        rawUpdateData = ByteArray(0),
     )
 
     @Test
@@ -149,5 +149,25 @@ class PythPriceClientTest {
         val tooUncertain = assertIs<PythAuditedPriceResult.TooUncertain>(result)
         assertEquals(BigDecimal("0.020000"), tooUncertain.confidenceRatio)
         assertEquals(defaultMaxConfidenceRatio, tooUncertain.maxAllowedRatio)
+    }
+
+    @Test
+    fun timeToStaleCountsFromPublishTimeNotFromFetch() {
+        val now = Instant.ofEpochSecond(1_700_000_000)
+        val fetched = price(publishTime = now.minusSeconds(45).epochSecond)
+
+        assertEquals(
+            15_000L,
+            fetched.millisUntilStale(defaultMaxPriceAge, now),
+            "a price already 45s old must expire in 15s, not in a fresh 60s",
+        )
+    }
+
+    @Test
+    fun anAlreadyStalePriceHasNoTimeLeft() {
+        val now = Instant.ofEpochSecond(1_700_000_000)
+        val fetched = price(publishTime = now.minusSeconds(defaultMaxPriceAge.seconds + 30).epochSecond)
+
+        assertTrue(fetched.millisUntilStale(defaultMaxPriceAge, now) <= 0L)
     }
 }

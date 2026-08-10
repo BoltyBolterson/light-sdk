@@ -33,8 +33,6 @@ class PythPriceClient {
         }
     }
 
-    suspend fun getDisplayPrice(chain: Chain): PythPrice = fetchLatest(chain)
-
     suspend fun getAuditedPrice(
         chain: Chain,
         maxConfidenceRatio: BigDecimal = DEFAULT_MAX_CONFIDENCE_RATIO,
@@ -47,9 +45,7 @@ class PythPriceClient {
     private suspend fun fetchLatest(chain: Chain): PythPrice {
         val feedId = chain.pythFeedId()
         try {
-            val response = client.get(
-                "$HERMES_BASE/v2/updates/price/latest?ids%5B%5D=$feedId&encoding=hex",
-            )
+            val response = client.get("$HERMES_BASE/v2/updates/price/latest?ids%5B%5D=$feedId")
 
             if (!response.status.isSuccess()) {
                 val body = response.bodyAsText().take(500)
@@ -59,15 +55,12 @@ class PythPriceClient {
             val parsedResponse: HermesLatestPriceResponse = response.body()
             val entry = parsedResponse.parsed.firstOrNull { it.id.equals(feedId, ignoreCase = true) }
                 ?: throw IllegalStateException("Hermes response had no price entry for feed $feedId")
-            val rawHex = parsedResponse.binary.data.firstOrNull()
-                ?: throw IllegalStateException("Hermes response had no binary update data for feed $feedId")
 
             return PythPrice(
                 chain = chain,
                 usdPrice = entry.price.priceAsUsd(),
                 confidenceUsd = entry.price.confAsUsd(),
                 publishTime = entry.price.publishTime,
-                rawUpdateData = rawHex.decodeHex(),
             )
         } catch (e: CancellationException) {
             throw e
@@ -134,14 +127,7 @@ private fun Chain.pythFeedId(): String = when (this) {
 
 @Serializable
 internal data class HermesLatestPriceResponse(
-    val binary: HermesBinaryUpdate,
     val parsed: List<HermesParsedPrice> = emptyList(),
-)
-
-@Serializable
-internal data class HermesBinaryUpdate(
-    val encoding: String,
-    val data: List<String>,
 )
 
 @Serializable
@@ -165,47 +151,21 @@ private fun HermesPricePoint.priceAsUsd(): BigDecimal =
 private fun HermesPricePoint.confAsUsd(): BigDecimal =
     BigDecimal(BigInteger(conf)).scaleByPowerOfTen(expo)
 
-private fun String.decodeHex(): ByteArray {
-    require(length % 2 == 0) { "Hex string $this has odd length" }
-    return ByteArray(length / 2) { i ->
-        val hi = Character.digit(this[i * 2], 16)
-        val lo = Character.digit(this[i * 2 + 1], 16)
-        require(hi >= 0 && lo >= 0) { "Invalid hex string $this" }
-        ((hi shl 4) + lo).toByte()
-    }
-}
-
 data class PythPrice(
     val chain: Chain,
     val usdPrice: BigDecimal,
     val confidenceUsd: BigDecimal,
     val publishTime: Long,
-    val rawUpdateData: ByteArray,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is PythPrice) return false
-        return chain == other.chain &&
-            usdPrice == other.usdPrice &&
-            confidenceUsd == other.confidenceUsd &&
-            publishTime == other.publishTime &&
-            rawUpdateData.contentEquals(other.rawUpdateData)
-    }
-
-    override fun hashCode(): Int {
-        var result = chain.hashCode()
-        result = 31 * result + usdPrice.hashCode()
-        result = 31 * result + confidenceUsd.hashCode()
-        result = 31 * result + publishTime.hashCode()
-        result = 31 * result + rawUpdateData.contentHashCode()
-        return result
-    }
-}
+)
 
 fun PythPrice.confidenceRatio(): BigDecimal {
     require(usdPrice.signum() > 0) { "Cannot compute a confidence ratio for non-positive usdPrice=$usdPrice" }
     return confidenceUsd.divide(usdPrice, 6, RoundingMode.HALF_UP)
 }
+
+/** Ages from the publish time, not from when we happened to fetch it. */
+fun PythPrice.millisUntilStale(maxPriceAge: Duration, now: Instant): Long =
+    Instant.ofEpochSecond(publishTime).plus(maxPriceAge).toEpochMilli() - now.toEpochMilli()
 
 sealed class PythAuditedPriceResult {
     data class Trusted(val price: PythPrice) : PythAuditedPriceResult()

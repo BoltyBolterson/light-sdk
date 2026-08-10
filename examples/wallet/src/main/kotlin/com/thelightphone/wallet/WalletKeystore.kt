@@ -24,6 +24,7 @@ internal class WalletKeystore(
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(256)
+            .setUnlockedDeviceRequired(true)
             .build()
 
         keyGenerator.init(spec)

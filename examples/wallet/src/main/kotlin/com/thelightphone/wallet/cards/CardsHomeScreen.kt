@@ -14,10 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.SealedLightActivity
-import com.thelightphone.sdk.buildDatabase
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightBottomBar
-import com.thelightphone.sdk.ui.LightFullscreenModal
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -28,16 +26,12 @@ import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
-import com.thelightphone.wallet.CardRepository
-import com.thelightphone.wallet.WalletAccountRepository
-import com.thelightphone.wallet.WalletDatabase
+import com.thelightphone.wallet.WalletStore
 
 class CardsHomeScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, CardsViewModel>(sealedActivity) {
 
-    private val repository = CardRepository.getInstance {
-        WalletDatabase.build(lightContext)
-    }
+    private val repository = WalletStore.cards(lightContext)
 
     override val viewModelClass: Class<CardsViewModel>
         get() = CardsViewModel::class.java
@@ -48,74 +42,64 @@ class CardsHomeScreen(sealedActivity: SealedLightActivity) :
     override fun Content() {
         val themeColors by LightThemeController.colors.collectAsState()
         val cards by viewModel.cards.collectAsState()
-        val errorModal by viewModel.errorModal.collectAsState()
 
         LightTheme(colors = themeColors) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(LightThemeTokens.colors.background),
-                ) {
-                    LightTopBar(
-                        center = LightTopBarCenter.Text("Cards"),
-                        modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
-                    )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(LightThemeTokens.colors.background),
+            ) {
+                LightTopBar(
+                    center = LightTopBarCenter.Text("Cards"),
+                    modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
+                )
 
-                    if (cards.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            LightText(
-                                text = "no cards yet…",
-                                variant = LightTextVariant.Copy,
-                                align = TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 1f.gridUnitsAsDp()),
+                if (cards.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        LightText(
+                            text = "no cards yet…",
+                            variant = LightTextVariant.Copy,
+                            align = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 1f.gridUnitsAsDp()),
+                        )
+                    }
+                } else {
+                    LightScrollView(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(start = 1f.gridUnitsAsDp()),
+                    ) {
+                        cards.forEach { card ->
+                            CardRow(
+                                card = card,
+                                modifier = Modifier
+                                    .lightClickable {
+                                        navigateTo(screenFactory = {
+                                            ShowCardScreen(it, card.id, card.name, card.barcodeFormat)
+                                        })
+                                    }
+                                    .padding(vertical = 0.75f.gridUnitsAsDp()),
                             )
                         }
-                    } else {
-                        LightScrollView(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(start = 1f.gridUnitsAsDp()),
-                        ) {
-                            cards.forEach { card ->
-                                CardRow(
-                                    card = card,
-                                    modifier = Modifier
-                                        .lightClickable {
-                                            navigateTo(screenFactory = {
-                                                ShowCardScreen(it, card.id, card.name, card.barcodeFormat)
-                                            })
-                                        }
-                                        .padding(vertical = 0.75f.gridUnitsAsDp()),
-                                )
-                            }
-                        }
                     }
+                }
 
-                    LightBottomBar(
-                        items = listOf(
-                            LightBarButton.Text(
-                                text = "ADD CARD",
-                                onClick = {
-                                    navigateTo(screenFactory = { AddCardScreen(it) })
-                                },
-                            ),
+                LightBottomBar(
+                    items = listOf(
+                        LightBarButton.Text(
+                            text = "ADD CARD",
+                            onClick = {
+                                navigateTo(screenFactory = { AddCardScreen(it) })
+                            },
                         ),
-                    )
-                }
-
-                errorModal?.let { message ->
-                    LightFullscreenModal(
-                        message = message,
-                        onClose = viewModel::dismissError,
-                    )
-                }
+                    ),
+                )
             }
         }
     }

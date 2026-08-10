@@ -19,7 +19,7 @@ internal object Bip32 {
     }
 
     fun deriveChild(parent: ExtendedKey, index: Long): ExtendedKey {
-        val indexBytes = ByteArray(4) { i -> ((index shr (24 - 8 * i)) and 0xFF).toByte() }
+        val indexBytes = ser32(index)
         val data = if (index >= HARDENED_OFFSET) {
             byteArrayOf(0x00) + parent.privateKey + indexBytes
         } else {
@@ -52,16 +52,19 @@ internal object Bip32 {
         val value = BigInteger(1, key)
         return value != BigInteger.ZERO && value < Secp256k1.n
     }
-
-    private fun hmacSha512(key: ByteArray, data: ByteArray): ByteArray {
-        val hmac = HMac(SHA512Digest())
-        hmac.init(KeyParameter(key))
-        hmac.update(data, 0, data.size)
-        val out = ByteArray(hmac.macSize)
-        hmac.doFinal(out, 0)
-        return out
-    }
 }
+
+internal fun hmacSha512(key: ByteArray, data: ByteArray): ByteArray {
+    val hmac = HMac(SHA512Digest())
+    hmac.init(KeyParameter(key))
+    hmac.update(data, 0, data.size)
+    val out = ByteArray(hmac.macSize)
+    hmac.doFinal(out, 0)
+    return out
+}
+
+internal fun ser32(index: Long): ByteArray =
+    ByteArray(4) { i -> ((index shr (24 - 8 * i)) and 0xFF).toByte() }
 
 internal fun parsePath(path: String): List<Long> {
     val segments = path.removePrefix("m").removePrefix("/").split("/").filter { it.isNotBlank() }

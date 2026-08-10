@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SimpleLightScreen
-import com.thelightphone.sdk.buildDatabase
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightBottomBar
 import com.thelightphone.sdk.ui.LightFullscreenModal
@@ -28,10 +27,8 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
-import com.thelightphone.wallet.CardRepository
-import com.thelightphone.wallet.WalletAccountRepository
-import com.thelightphone.wallet.WalletDatabase
 import com.thelightphone.wallet.WalletEditorRequest
+import com.thelightphone.wallet.WalletStore
 import com.thelightphone.wallet.WalletTextEditorScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,9 +38,7 @@ class AddCardScreen(
     sealedActivity: SealedLightActivity,
 ) : SimpleLightScreen<Unit>(sealedActivity) {
 
-    private val repository = CardRepository.getInstance {
-        WalletDatabase.build(lightContext)
-    }
+    private val repository = WalletStore.cards(lightContext)
 
     @Composable
     override fun Content() {

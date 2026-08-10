@@ -38,9 +38,7 @@ import com.thelightphone.wallet.settings.SettingsScreen
 class WalletsListScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, WalletsListViewModel>(sealedActivity) {
 
-    private val repository = WalletAccountRepository.getInstance {
-        WalletDatabase.build(lightContext)
-    }
+    private val repository = WalletStore.accounts(lightContext)
 
     override val viewModelClass: Class<WalletsListViewModel>
         get() = WalletsListViewModel::class.java

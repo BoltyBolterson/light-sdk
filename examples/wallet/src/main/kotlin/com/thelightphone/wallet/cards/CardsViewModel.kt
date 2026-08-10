@@ -17,23 +17,12 @@ class CardsViewModel(
     private val _cards = MutableStateFlow<List<CardSummary>>(emptyList())
     val cards: StateFlow<List<CardSummary>> = _cards.asStateFlow()
 
-    private val _errorModal = MutableStateFlow<String?>(null)
-    val errorModal: StateFlow<String?> = _errorModal.asStateFlow()
-
     init {
         loadCards()
     }
 
     override fun onScreenShow(screen: SimpleLightScreen<Unit>) {
         loadCards()
-    }
-
-    fun showError(message: String) {
-        _errorModal.value = message
-    }
-
-    fun dismissError() {
-        _errorModal.value = null
     }
 
     private fun loadCards() {

@@ -15,7 +15,7 @@ abstract class WalletDatabase : RoomDatabase() {
             Room.databaseBuilder(
                 lightContext.applicationContext,
                 WalletDatabase::class.java,
-                WalletAccountRepository.DATABASE_NAME,
+                WalletStore.DATABASE_NAME,
             )
                 .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()

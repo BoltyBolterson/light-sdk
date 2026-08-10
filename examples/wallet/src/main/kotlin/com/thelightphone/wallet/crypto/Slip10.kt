@@ -1,9 +1,5 @@
 package com.thelightphone.wallet.crypto
 
-import org.bouncycastle.crypto.digests.SHA512Digest
-import org.bouncycastle.crypto.macs.HMac
-import org.bouncycastle.crypto.params.KeyParameter
-
 /** SLIP-0010 key derivation for ed25519 (solana). Every index is hardened, ed25519 can't do normal. */
 internal object Slip10Ed25519 {
     data class ExtendedKey(val privateKey: ByteArray, val chainCode: ByteArray)
@@ -15,7 +11,7 @@ internal object Slip10Ed25519 {
 
     fun deriveChild(parent: ExtendedKey, index: Long): ExtendedKey {
         val hardenedIndex = index + Bip32.HARDENED_OFFSET
-        val indexBytes = ByteArray(4) { i -> ((hardenedIndex shr (24 - 8 * i)) and 0xFF).toByte() }
+        val indexBytes = ser32(hardenedIndex)
         val data = byteArrayOf(0x00) + parent.privateKey + indexBytes
 
         val i = hmacSha512(key = parent.chainCode, data = data)
@@ -29,14 +25,5 @@ internal object Slip10Ed25519 {
             key = deriveChild(key, segment - Bip32.HARDENED_OFFSET)
         }
         return key
-    }
-
-    private fun hmacSha512(key: ByteArray, data: ByteArray): ByteArray {
-        val hmac = HMac(SHA512Digest())
-        hmac.init(KeyParameter(key))
-        hmac.update(data, 0, data.size)
-        val out = ByteArray(hmac.macSize)
-        hmac.doFinal(out, 0)
-        return out
     }
 }

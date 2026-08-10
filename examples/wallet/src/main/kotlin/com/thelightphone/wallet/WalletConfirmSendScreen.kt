@@ -26,6 +26,8 @@ import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 
+private const val ADDRESS_CHUNK_SIZE = 4
+
 class WalletConfirmSendScreen(
     sealedActivity: SealedLightActivity,
     private val destinationAddress: String,
@@ -80,9 +82,10 @@ class WalletConfirmSendScreen(
                             modifier = Modifier.fillMaxWidth(),
                         )
                         LightText(
-                            text = destinationAddress,
-                            variant = LightTextVariant.Copy,
+                            text = destinationAddress.chunked(ADDRESS_CHUNK_SIZE).joinToString(" "),
+                            variant = LightTextVariant.Detail,
                             align = TextAlign.Center,
+                            monospace = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }

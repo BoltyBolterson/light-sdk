@@ -34,9 +34,7 @@ class WalletHomeScreen(
     private val walletId: Long,
 ) : LightScreen<Unit, WalletViewModel>(sealedActivity) {
 
-    private val repository = WalletAccountRepository.getInstance {
-        WalletDatabase.build(lightContext)
-    }
+    private val repository = WalletStore.accounts(lightContext)
 
     override val viewModelClass: Class<WalletViewModel>
         get() = WalletViewModel::class.java
@@ -106,7 +104,8 @@ class WalletHomeScreen(
                             LightBarButton.Text(
                                 text = "SEND",
                                 onClick = {
-                                    navigateTo(screenFactory = { WalletScanScreen(it) }) { destination ->
+                                    val chains = accounts.map { it.chain }.ifEmpty { Chain.entries }
+                                    navigateTo(screenFactory = { WalletScanScreen(it, chains) }) { destination ->
                                         navigateTo(screenFactory = {
                                             WalletSendScreen(it, destination)
                                         })

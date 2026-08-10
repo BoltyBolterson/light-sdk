@@ -1,6 +1,6 @@
 package com.thelightphone.wallet
 
-class CardRepository private constructor(
+class CardRepository internal constructor(
     database: WalletDatabase,
     private val cipher: WalletKeyCipher,
 ) {
@@ -23,23 +23,5 @@ class CardRepository private constructor(
     fun getDecryptedPayload(id: Long): String {
         val card = dao.getById(id) ?: error("No card with id $id")
         return String(cipher.decrypt(card.encryptedPayload), Charsets.UTF_8)
-    }
-
-    fun deleteCard(id: Long) {
-        dao.delete(id)
-    }
-
-    companion object {
-        @Volatile
-        private var instance: CardRepository? = null
-
-        fun getInstance(databaseProvider: () -> WalletDatabase): CardRepository {
-            return instance ?: synchronized(this) {
-                instance ?: CardRepository(
-                    database = databaseProvider(),
-                    cipher = WalletKeyCipher(),
-                ).also { instance = it }
-            }
-        }
     }
 }

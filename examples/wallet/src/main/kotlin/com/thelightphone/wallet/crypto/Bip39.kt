@@ -16,15 +16,18 @@ internal object Bip39 {
             "entropy must be 128/160/192/224/256 bits, got ${entropy.size * 8}"
         }
         val checksumLength = entropy.size * 8 / 32
-        val checksumByte = MessageDigest.getInstance("SHA-256").digest(entropy)[0]
+        val digest = MessageDigest.getInstance("SHA-256").digest(entropy)
+        try {
+            val bits = StringBuilder()
+            for (byte in entropy) {
+                bits.append(byteToBits(byte))
+            }
+            bits.append(byteToBits(digest[0]).take(checksumLength))
 
-        val bits = StringBuilder()
-        for (byte in entropy) {
-            bits.append(byteToBits(byte))
+            return bits.chunked(11).map { chunk -> Bip39Wordlist.WORDS[chunk.toInt(2)] }
+        } finally {
+            digest.fill(0)
         }
-        bits.append(byteToBits(checksumByte).take(checksumLength))
-
-        return bits.chunked(11).map { chunk -> Bip39Wordlist.WORDS[chunk.toInt(2)] }
     }
 
     fun isValidMnemonic(mnemonic: List<String>): Boolean {
@@ -34,19 +37,28 @@ internal object Bip39 {
 
         val entropyBits = bits.length * 32 / 33
         val entropyBytes = bits.take(entropyBits).chunked(8).map { it.toInt(2).toByte() }.toByteArray()
-        val expectedChecksumBits = bits.substring(entropyBits)
-        val actualChecksum = byteToBits(MessageDigest.getInstance("SHA-256").digest(entropyBytes)[0])
-            .take(expectedChecksumBits.length)
-        return actualChecksum == expectedChecksumBits
+        val digest = MessageDigest.getInstance("SHA-256").digest(entropyBytes)
+        try {
+            val expectedChecksumBits = bits.substring(entropyBits)
+            val actualChecksum = byteToBits(digest[0]).take(expectedChecksumBits.length)
+            return actualChecksum == expectedChecksumBits
+        } finally {
+            entropyBytes.fill(0)
+            digest.fill(0)
+        }
     }
 
     fun mnemonicToSeed(mnemonic: List<String>, passphrase: String = ""): ByteArray {
         val password = mnemonic.joinToString(" ").toByteArray(Charsets.UTF_8)
         val salt = ("mnemonic" + passphrase).toByteArray(Charsets.UTF_8)
-
-        val generator = PKCS5S2ParametersGenerator(SHA512Digest())
-        generator.init(password, salt, PBKDF2_ITERATIONS)
-        return (generator.generateDerivedParameters(SEED_BITS) as KeyParameter).key
+        try {
+            val generator = PKCS5S2ParametersGenerator(SHA512Digest())
+            generator.init(password, salt, PBKDF2_ITERATIONS)
+            return (generator.generateDerivedParameters(SEED_BITS) as KeyParameter).key
+        } finally {
+            password.fill(0)
+            salt.fill(0)
+        }
     }
 
     private fun byteToBits(byte: Byte): String =

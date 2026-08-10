@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SimpleLightScreen
-import com.thelightphone.sdk.buildDatabase
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightFullscreenModal
 import com.thelightphone.sdk.ui.LightIcons
@@ -34,9 +33,7 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
-import com.thelightphone.wallet.CardRepository
-import com.thelightphone.wallet.WalletAccountRepository
-import com.thelightphone.wallet.WalletDatabase
+import com.thelightphone.wallet.WalletStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -47,9 +44,7 @@ class ShowCardScreen(
     private val barcodeFormat: String,
 ) : SimpleLightScreen<Unit>(sealedActivity) {
 
-    private val repository = CardRepository.getInstance {
-        WalletDatabase.build(lightContext)
-    }
+    private val repository = WalletStore.cards(lightContext)
 
     @Composable
     override fun Content() {

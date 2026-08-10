@@ -16,9 +16,9 @@ internal object ChainKeyPair {
 
     fun deriveFrom(seed: ByteArray, chain: Chain): Generated {
         val privateKey = when (chain) {
-            Chain.SOLANA -> Slip10Ed25519.derivePath(seed, SOLANA_PATH).privateKey
-            Chain.BITCOIN -> Bip32.derivePath(seed, BITCOIN_PATH).privateKey
-            Chain.ETHEREUM -> Bip32.derivePath(seed, ETHEREUM_PATH).privateKey
+            Chain.SOLANA -> Slip10Ed25519.derivePath(seed, SOLANA_PATH).run { chainCode.fill(0); privateKey }
+            Chain.BITCOIN -> Bip32.derivePath(seed, BITCOIN_PATH).run { chainCode.fill(0); privateKey }
+            Chain.ETHEREUM -> Bip32.derivePath(seed, ETHEREUM_PATH).run { chainCode.fill(0); privateKey }
         }
         return Generated(privateKey, addressFor(chain, privateKey))
     }

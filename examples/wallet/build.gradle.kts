@@ -65,6 +65,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.bouncycastle.provider)
+    implementation(libs.sol4k)
 
     testImplementation(libs.kotlin.test)
 }

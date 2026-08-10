@@ -1,6 +1,7 @@
 package com.thelightphone.wallet.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,10 +15,12 @@ import androidx.compose.ui.Modifier
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightBarButton
+import com.thelightphone.sdk.ui.LightFullscreenModal
 import com.thelightphone.sdk.ui.LightIcon
 import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
+import com.thelightphone.sdk.ui.LightTextField
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightTheme
 import com.thelightphone.sdk.ui.LightThemeController
@@ -27,6 +30,8 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import com.thelightphone.wallet.Chain
+import com.thelightphone.wallet.WalletEditorRequest
+import com.thelightphone.wallet.WalletTextEditorScreen
 
 class SettingsScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, SettingsViewModel>(sealedActivity) {
@@ -40,8 +45,10 @@ class SettingsScreen(sealedActivity: SealedLightActivity) :
     override fun Content() {
         val themeColors by LightThemeController.colors.collectAsState()
         val state by viewModel.uiState.collectAsState()
+        val errorModal by viewModel.errorModal.collectAsState()
 
         LightTheme(colors = themeColors) {
+            Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -72,7 +79,39 @@ class SettingsScreen(sealedActivity: SealedLightActivity) :
                             },
                         )
                     }
+
+                    SectionHeading("Solana RPC")
+                    LightTextField(
+                        label = "Endpoint:",
+                        value = state.solanaRpc,
+                        placeholder = "Required to send",
+                        onClick = {
+                            navigateTo(
+                                screenFactory = {
+                                    WalletTextEditorScreen(
+                                        it,
+                                        WalletEditorRequest(
+                                            title = "Solana RPC",
+                                            initialValue = state.solanaRpc,
+                                        ),
+                                    )
+                                },
+                                resultCallback = { viewModel.setSolanaRpc(it) },
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 0.5f.gridUnitsAsDp()),
+                    )
                 }
+            }
+
+            errorModal?.let { message ->
+                LightFullscreenModal(
+                    message = message,
+                    onClose = viewModel::dismissError,
+                )
+            }
             }
         }
     }

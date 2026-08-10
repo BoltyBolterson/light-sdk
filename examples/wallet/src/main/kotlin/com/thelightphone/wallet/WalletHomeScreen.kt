@@ -107,7 +107,7 @@ class WalletHomeScreen(
                                     val chains = accounts.map { it.chain }.ifEmpty { Chain.entries }
                                     navigateTo(screenFactory = { WalletScanScreen(it, chains) }) { destination ->
                                         navigateTo(screenFactory = {
-                                            WalletSendScreen(it, destination)
+                                            WalletSendScreen(it, destination, walletId)
                                         })
                                     }
                                 },

@@ -23,6 +23,19 @@ abstract class WalletDatabase : RoomDatabase() {
                         "`encrypted_payload` BLOB NOT NULL, " +
                         "`created_at` INTEGER NOT NULL)",
                 )
+                connection.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `wallet_seed_v2` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`name` TEXT NOT NULL, " +
+                        "`encrypted_entropy` BLOB NOT NULL, " +
+                        "`created_at` INTEGER NOT NULL)",
+                )
+                connection.execSQL(
+                    "INSERT INTO `wallet_seed_v2` (`id`, `name`, `encrypted_entropy`, `created_at`) " +
+                        "SELECT `id`, 'Wallet ' || (`id` + 1), `encrypted_entropy`, 0 FROM `wallet_seed`",
+                )
+                connection.execSQL("DROP TABLE `wallet_seed`")
+                connection.execSQL("ALTER TABLE `wallet_seed_v2` RENAME TO `wallet_seed`")
             }
         }
 

@@ -44,6 +44,20 @@ class WalletAccountRepository internal constructor(
         }
     }
 
+    fun sendSol(walletId: Long, rpcUrl: String, destination: String, lamports: Long): String {
+        val seed = mnemonicSeed(walletId)
+        val generated = try {
+            ChainKeyPair.deriveFrom(seed, Chain.SOLANA)
+        } finally {
+            seed.fill(0)
+        }
+        try {
+            return SolanaSender(rpcUrl).send(generated.privateKey, destination, lamports)
+        } finally {
+            generated.privateKey.fill(0)
+        }
+    }
+
     private fun mnemonicSeed(walletId: Long): ByteArray {
         val entropy = entropy(walletId)
         try {

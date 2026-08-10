@@ -3,21 +3,38 @@ package com.thelightphone.wallet
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.thelightphone.sdk.SealedLightContext
 
-@Database(entities = [WalletSeedEntity::class, CardEntity::class], version = 2, exportSchema = false)
+@Database(entities = [WalletSeedEntity::class, CardEntity::class], version = 2, exportSchema = true)
 abstract class WalletDatabase : RoomDatabase() {
     internal abstract fun seedDao(): WalletSeedDao
     internal abstract fun cardDao(): CardDao
 
     companion object {
+        internal val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(connection: SupportSQLiteDatabase) {
+                connection.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `cards` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`name` TEXT NOT NULL, " +
+                        "`barcode_format` TEXT NOT NULL, " +
+                        "`encrypted_payload` BLOB NOT NULL, " +
+                        "`created_at` INTEGER NOT NULL)",
+                )
+            }
+        }
+
+        internal val MIGRATIONS = arrayOf(MIGRATION_1_2)
+
         fun build(lightContext: SealedLightContext): WalletDatabase =
             Room.databaseBuilder(
                 lightContext.applicationContext,
                 WalletDatabase::class.java,
                 WalletStore.DATABASE_NAME,
             )
-                .fallbackToDestructiveMigration(dropAllTables = true)
+                .addMigrations(*MIGRATIONS)
                 .build()
     }
 }

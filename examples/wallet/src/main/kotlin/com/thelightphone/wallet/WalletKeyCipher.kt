@@ -8,6 +8,7 @@ import javax.crypto.spec.GCMParameterSpec
 internal class WalletKeyCipher(
     private val keystore: WalletKeystore = WalletKeystore(),
     private val ensureKey: Boolean = true,
+    private val legacy: WalletKeystore? = WalletKeystore(WalletKeystore.LEGACY_KEY_ALIAS),
 ) {
     private fun secretKey(): SecretKey {
         if (ensureKey) keystore.ensureKey()
@@ -25,7 +26,13 @@ internal class WalletKeyCipher(
             .array()
     }
 
-    fun decrypt(blob: ByteArray): ByteArray {
+    fun decrypt(blob: ByteArray): ByteArray =
+        runCatching { decryptWith(secretKey(), blob) }.getOrElse { failure ->
+            val fallback = legacy?.takeIf { it.exists() } ?: throw failure
+            decryptWith(fallback.getSecretKey(), blob)
+        }
+
+    private fun decryptWith(key: SecretKey, blob: ByteArray): ByteArray {
         val buffer = ByteBuffer.wrap(blob)
         val iv = ByteArray(GCM_IV_LENGTH)
         buffer.get(iv)
@@ -35,7 +42,7 @@ internal class WalletKeyCipher(
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(
             Cipher.DECRYPT_MODE,
-            secretKey(),
+            key,
             GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv),
         )
         return cipher.doFinal(ciphertext)

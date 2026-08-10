@@ -30,7 +30,7 @@ object WalletStore {
 
     private fun database(lightContext: SealedLightContext): WalletDatabase =
         database ?: WalletDatabase.build(lightContext)
-            .also { WalletKeyMigration.run(it) }
+            .also { runCatching { WalletKeyMigration.run(it) } }
             .also { database = it }
 
     private fun cipher(): WalletKeyCipher = cipher ?: WalletKeyCipher().also { cipher = it }

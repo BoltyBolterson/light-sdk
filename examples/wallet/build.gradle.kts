@@ -50,6 +50,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(rootProject.ext["jvmTarget"] as String))
@@ -60,9 +64,6 @@ dependencies {
     implementation(project(":sdk:client"))
     ksp(libs.androidx.room.compiler)
 
-    // Enabled locally against a temporary allow-list patch in plugin/.../LightSdkPlugin.kt
-    // (uncommitted - see that file). Real upstream approval tracked at
-    // lightphone/light-sdk#149 (cites Guy's go-ahead in discussion #139).
     implementation(libs.bouncycastle.provider)
 
     testImplementation(libs.kotlin.test)

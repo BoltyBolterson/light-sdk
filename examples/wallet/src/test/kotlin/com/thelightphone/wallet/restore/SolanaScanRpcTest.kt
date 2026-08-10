@@ -9,15 +9,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Every test here asks one question: can a broken, hostile or errored RPC response be mistaken for
- * "this address is empty"? That mistake tells someone their funded seed holds nothing.
- */
 class SolanaScanRpcTest {
 
     private val address = "AaaaAaaaAaaaAaaaAaaaAaaaAaaaAaaaAaaaAaaaAaa"
-
-    // ── parseBalance ──────────────────────────────────────────────────────
 
     @Test
     fun balanceIsRead() {
@@ -44,7 +38,6 @@ class SolanaScanRpcTest {
 
     @Test
     fun emptyBodyIsUnknownNotZero() {
-        // The scanner turns any transport failure into an empty body, so this is the dead-host path.
         assertNull(SolanaScanRpc.parseBalance(""))
     }
 
@@ -58,23 +51,47 @@ class SolanaScanRpcTest {
         assertNull(SolanaScanRpc.parseBalance("""{"jsonrpc":"2.0","id":0,"result":{"value":"lots"}}"""))
     }
 
-    // ── parseHasTokenBalance ──────────────────────────────────────────────
-
-    private fun tokenBody(vararg uiAmounts: Double): String {
-        val entries = uiAmounts.joinToString(",") {
-            """{"account":{"data":{"parsed":{"info":{"mint":"MintAAA","tokenAmount":{"uiAmount":$it}}}}}}"""
+    private fun tokenBody(vararg amounts: Long): String {
+        val entries = amounts.joinToString(",") {
+            """{"account":{"data":{"parsed":{"info":{"mint":"MintAAA","tokenAmount":{"amount":"$it","decimals":6}}}}}}"""
         }
         return """{"jsonrpc":"2.0","id":0,"result":{"context":{"slot":1},"value":[$entries]}}"""
     }
 
+    private fun rawTokenBody(vararg entries: String): String =
+        """{"jsonrpc":"2.0","id":0,"result":{"context":{"slot":1},"value":[${entries.joinToString(",")}]}}"""
+
     @Test
     fun anyPositiveTokenBalanceCounts() {
-        assertEquals(true, SolanaScanRpc.parseHasTokenBalance(tokenBody(0.0, 1.5)))
+        assertEquals(true, SolanaScanRpc.parseHasTokenBalance(tokenBody(0L, 1_500_000L)))
     }
 
     @Test
     fun onlyZeroBalanceTokenAccountsAreNotHoldings() {
-        assertEquals(false, SolanaScanRpc.parseHasTokenBalance(tokenBody(0.0, 0.0)))
+        assertEquals(false, SolanaScanRpc.parseHasTokenBalance(tokenBody(0L, 0L)))
+    }
+
+    @Test
+    fun nullUiAmountEntryIsUnknownNotFalse() {
+        val body = rawTokenBody(
+            """{"account":{"data":{"parsed":{"info":{"mint":"MintAAA","tokenAmount":{"uiAmount":null}}}}}}""",
+        )
+        assertNull(SolanaScanRpc.parseHasTokenBalance(body), "an entry we cannot read is not a zero balance")
+    }
+
+    @Test
+    fun base64EncodedEntryIsUnknownNotFalse() {
+        val body = rawTokenBody("""{"account":{"data":["dGVzdA==","base64"]}}""")
+        assertNull(SolanaScanRpc.parseHasTokenBalance(body))
+    }
+
+    @Test
+    fun oneUnreadableEntryPoisonsAReadableHolding() {
+        val body = rawTokenBody(
+            """{"account":{"data":{"parsed":{"info":{"tokenAmount":{"amount":"0","decimals":6}}}}}}""",
+            """{"account":{"data":["dGVzdA==","base64"]}}""",
+        )
+        assertNull(SolanaScanRpc.parseHasTokenBalance(body))
     }
 
     @Test
@@ -98,8 +115,6 @@ class SolanaScanRpcTest {
         assertNull(SolanaScanRpc.parseHasTokenBalance("""{"jsonrpc":"2.0","id":0,"result":{"context":{"slot":1}}}"""))
     }
 
-    // ── hasAnyTokenBalance: combining the two token programs ──────────────
-
     @Test
     fun holdingsInEitherProgramCount() {
         assertEquals(true, SolanaScanRpc.hasAnyTokenBalance(listOf(false, true)))
@@ -113,13 +128,11 @@ class SolanaScanRpcTest {
 
     @Test
     fun oneProgramUnreadableMakesTheWholeAnswerUnknown() {
-        // Token-2022 read failed. The tokens we could not see may be the only ones this wallet holds.
         assertNull(SolanaScanRpc.hasAnyTokenBalance(listOf(false, null)))
     }
 
     @Test
     fun aFoundHoldingBeatsAnUnreadableSibling() {
-        // We already know there is money here; the failed read cannot make that less true.
         assertEquals(true, SolanaScanRpc.hasAnyTokenBalance(listOf(true, null)))
     }
 
@@ -127,8 +140,6 @@ class SolanaScanRpcTest {
     fun noProgramsQueriedIsUnknownNotFalse() {
         assertNull(SolanaScanRpc.hasAnyTokenBalance(emptyList()), "asking nothing is not the same as finding nothing")
     }
-
-    // ── requests ──────────────────────────────────────────────────────────
 
     @Test
     fun balanceRequestNamesTheAddress() {
@@ -151,9 +162,14 @@ class SolanaScanRpcTest {
 
     @Test
     fun bothTokenProgramsAreCovered() {
-        // Query only the classic program and every Token-2022 holding silently disappears.
         assertEquals(2, SolanaScanRpc.TOKEN_PROGRAM_IDS.size)
         assertTrue(SolanaScanRpc.TOKEN_PROGRAM_IDS.contains("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"))
         assertTrue(SolanaScanRpc.TOKEN_PROGRAM_IDS.contains("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"))
+    }
+
+    @Test
+    fun anExplicitNullErrorFieldIsNotAnError() {
+        val body = """{"jsonrpc":"2.0","id":0,"error":null,"result":{"context":{"slot":1},"value":7}}"""
+        assertEquals(7L, SolanaScanRpc.parseBalance(body), "a JSON null error field is not an error")
     }
 }

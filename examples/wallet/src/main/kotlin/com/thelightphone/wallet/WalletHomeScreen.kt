@@ -39,7 +39,7 @@ class WalletHomeScreen(
     override val viewModelClass: Class<WalletViewModel>
         get() = WalletViewModel::class.java
 
-    override fun createViewModel() = WalletViewModel(repository, walletId)
+    override fun createViewModel() = WalletViewModel(repository, walletId, lightContext.dataStore)
 
     @Composable
     override fun Content() {

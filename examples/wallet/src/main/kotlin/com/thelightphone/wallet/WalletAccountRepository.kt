@@ -31,10 +31,10 @@ class WalletAccountRepository internal constructor(
         dao.updateName(id, newName)
     }
 
-    fun listAccounts(walletId: Long): List<WalletAccount> {
+    fun listAccounts(walletId: Long, chains: Collection<Chain> = Chain.entries): List<WalletAccount> {
         val seed = mnemonicSeed(walletId)
         try {
-            return Chain.entries.map { chain ->
+            return chains.map { chain ->
                 val generated = ChainKeyPair.deriveFrom(seed, chain)
                 generated.privateKey.fill(0)
                 WalletAccount(chain = chain, address = generated.address)

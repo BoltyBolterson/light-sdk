@@ -1,7 +1,6 @@
 package com.thelightphone.wallet.settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,12 +14,10 @@ import androidx.compose.ui.Modifier
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightBarButton
-import com.thelightphone.sdk.ui.LightFullscreenModal
 import com.thelightphone.sdk.ui.LightIcon
 import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
-import com.thelightphone.sdk.ui.LightTextField
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightTheme
 import com.thelightphone.sdk.ui.LightThemeController
@@ -30,9 +27,6 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import com.thelightphone.wallet.Chain
-import com.thelightphone.wallet.WalletEditorRequest
-import com.thelightphone.wallet.WalletTextEditorScreen
-import com.thelightphone.wallet.keyboard.KeyboardLayout
 
 class SettingsScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, SettingsViewModel>(sealedActivity) {
@@ -46,96 +40,38 @@ class SettingsScreen(sealedActivity: SealedLightActivity) :
     override fun Content() {
         val themeColors by LightThemeController.colors.collectAsState()
         val state by viewModel.uiState.collectAsState()
-        val errorModal by viewModel.errorModal.collectAsState()
 
         LightTheme(colors = themeColors) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(LightThemeTokens.colors.background),
+            ) {
+                LightTopBar(
+                    leftButton = LightBarButton.LightIcon(
+                        icon = LightIcons.BACK,
+                        onClick = { goBack(Unit) },
+                    ),
+                    center = LightTopBarCenter.Text("Settings"),
+                    modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
+                )
+
+                LightScrollView(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(LightThemeTokens.colors.background),
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 1f.gridUnitsAsDp()),
                 ) {
-                    LightTopBar(
-                        leftButton = LightBarButton.LightIcon(
-                            icon = LightIcons.BACK,
-                            onClick = { goBack(Unit) },
-                        ),
-                        center = LightTopBarCenter.Text("Settings"),
-                        modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
-                    )
-
-                    LightScrollView(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(horizontal = 1f.gridUnitsAsDp()),
-                    ) {
-                        SectionHeading("Keyboard Layout")
-                        KeyboardLayout.entries.forEach { layout ->
-                            KeyboardLayoutRow(
-                                layout = layout,
-                                selected = state.keyboardLayout == layout,
-                                onSelect = { viewModel.setKeyboardLayout(layout) },
-                            )
-                        }
-
-                        SectionHeading("Chains")
-                        Chain.entries.forEach { chain ->
-                            ToggleRow(
-                                label = chain.displayName,
-                                checked = state.chainEnabled[chain] ?: true,
-                                onToggle = {
-                                    viewModel.setChainEnabled(chain, !(state.chainEnabled[chain] ?: true))
-                                },
-                            )
-                        }
-
-                        SectionHeading("RPC Endpoints")
-                        Chain.entries.forEach { chain ->
-                            val endpoint = state.rpcEndpoints[chain] ?: ""
-                            LightTextField(
-                                label = "${chain.displayName} RPC:",
-                                value = endpoint,
-                                placeholder = "Default",
-                                onClick = {
-                                    navigateTo(
-                                        screenFactory = {
-                                            WalletTextEditorScreen(
-                                                it,
-                                                WalletEditorRequest(
-                                                    title = "${chain.displayName} RPC",
-                                                    initialValue = endpoint,
-                                                ),
-                                            )
-                                        },
-                                        resultCallback = { result -> viewModel.setRpcEndpoint(chain, result) },
-                                    )
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 0.5f.gridUnitsAsDp()),
-                            )
-                        }
-
-                        SectionHeading("Network")
+                    SectionHeading("Chains")
+                    Chain.entries.forEach { chain ->
                         ToggleRow(
-                            label = "Offline mode",
-                            checked = state.offlineMode,
-                            onToggle = { viewModel.setOfflineMode(!state.offlineMode) },
-                        )
-                        ToggleRow(
-                            label = "Manual refresh only",
-                            checked = state.manualRefreshMode,
-                            onToggle = { viewModel.setManualRefreshMode(!state.manualRefreshMode) },
+                            label = chain.displayName,
+                            checked = state.chainEnabled[chain] ?: true,
+                            onToggle = {
+                                viewModel.setChainEnabled(chain, !(state.chainEnabled[chain] ?: true))
+                            },
                         )
                     }
-                }
-
-                errorModal?.let { message ->
-                    LightFullscreenModal(
-                        message = message,
-                        onClose = viewModel::dismissError,
-                    )
                 }
             }
         }
@@ -173,32 +109,6 @@ private fun ToggleRow(
         LightIcon(
             icon = if (checked) LightIcons.TOGGLE_STATE_ON else LightIcons.TOGGLE_STATE_OFF,
             contentDescription = "$label: ${if (checked) "on" else "off"}",
-        )
-    }
-}
-
-@Composable
-private fun KeyboardLayoutRow(
-    layout: KeyboardLayout,
-    selected: Boolean,
-    onSelect: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .lightClickable(onClick = onSelect)
-            .padding(vertical = 0.5f.gridUnitsAsDp()),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        LightText(
-            text = layout.label,
-            variant = LightTextVariant.Copy,
-            modifier = Modifier.weight(1f),
-        )
-        LightIcon(
-            icon = if (selected) LightIcons.SELECT_ON else LightIcons.SELECT_OFF,
-            contentDescription = "${layout.label}${if (selected) " (selected)" else ""}",
         )
     }
 }

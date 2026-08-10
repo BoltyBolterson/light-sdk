@@ -20,6 +20,10 @@ class CardRepository internal constructor(
         )
     }
 
+    fun deleteCard(id: Long) {
+        dao.delete(id)
+    }
+
     fun getDecryptedPayload(id: Long): String {
         val card = dao.getById(id) ?: error("No card with id $id")
         return String(cipher.decrypt(card.encryptedPayload), Charsets.UTF_8)

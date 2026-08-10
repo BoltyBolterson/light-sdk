@@ -14,4 +14,10 @@ internal interface CardDao {
 
     @Query("SELECT * FROM cards WHERE id = :id")
     fun getById(id: Long): CardEntity?
+
+    @Query("DELETE FROM cards WHERE id = :id")
+    fun delete(id: Long)
+
+    @Query("UPDATE cards SET encrypted_payload = :blob WHERE id = :id")
+    fun updateEncryptedPayload(id: Long, blob: ByteArray)
 }

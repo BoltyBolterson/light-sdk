@@ -19,6 +19,9 @@ internal interface WalletSeedDao {
     @Query("UPDATE wallet_seed SET name = :name WHERE id = :id")
     fun updateName(id: Long, name: String)
 
+    @Query("UPDATE wallet_seed SET encrypted_entropy = :blob WHERE id = :id")
+    fun updateEncryptedEntropy(id: Long, blob: ByteArray)
+
     @Transaction
     fun insertWithDefaultName(name: String?, encryptedEntropy: ByteArray, createdAt: Long): Long {
         val resolvedName = name ?: "Wallet ${getAll().size + 1}"

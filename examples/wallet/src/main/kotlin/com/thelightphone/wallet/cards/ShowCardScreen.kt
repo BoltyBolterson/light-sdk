@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SimpleLightScreen
 import com.thelightphone.sdk.ui.LightBarButton
+import com.thelightphone.sdk.ui.LightBottomBar
 import com.thelightphone.sdk.ui.LightFullscreenModal
 import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightScrollView
@@ -35,6 +37,7 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.wallet.WalletStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ShowCardScreen(
@@ -51,6 +54,8 @@ class ShowCardScreen(
         val themeColors by LightThemeController.colors.collectAsState()
         var payload by remember { mutableStateOf<String?>(null) }
         var errorModal by remember { mutableStateOf<String?>(null) }
+        var confirmingDelete by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
 
         LaunchedEffect(cardId) {
             val decrypted = withContext(Dispatchers.IO) {
@@ -128,6 +133,31 @@ class ShowCardScreen(
                         )
                     }
                 }
+
+                LightBottomBar(
+                    items = listOf(
+                        LightBarButton.Text(
+                            text = if (confirmingDelete) "TAP AGAIN TO DELETE" else "DELETE CARD",
+                            onClick = {
+                                if (!confirmingDelete) {
+                                    confirmingDelete = true
+                                    return@Text
+                                }
+                                scope.launch {
+                                    val removed = withContext(Dispatchers.IO) {
+                                        runCatching { repository.deleteCard(cardId) }
+                                    }
+                                    removed
+                                        .onSuccess { goBack(Unit) }
+                                        .onFailure {
+                                            confirmingDelete = false
+                                            errorModal = "Couldn't delete this card."
+                                        }
+                                }
+                            },
+                        ),
+                    ),
+                )
             }
         }
 
